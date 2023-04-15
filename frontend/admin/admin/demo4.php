@@ -2,7 +2,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.css"/>
         <div class="card">
             <div class="card-header text-center text-white" style="background: #1867ab;">
-                <h3>How to use Jquery DataTables in PHP? - Nicesnippets.com</h3>  
+                <h3>Filter result</h3>  
             </div>
             <div class="card-body">  
                 <table id="employee_data" class="table table-bordered table-striped"> 
@@ -24,22 +24,24 @@
                         <?php  
                             $total_amount = 0; 
                             $connect = mysqli_connect("localhost", "root", "", "arcodesi_ledger");  
-                            $query ="SELECT * FROM suppliers WHERE name = '$name1'";  
+                            $query ="SELECT * FROM suppliers WHERE name = '$name1' and CustomerCode = '$c_code'";  
                             $result = mysqli_query($connect, $query);
                             $row = $result->fetch_assoc(); 
-                            $real_id = $row['id']; 
+                            list($id) = mysqli_fetch_array($result); 
+                            $real_id = $row !== null ? $row['id'] : $id; 
                             $result2 = mysqli_query($connect,"select * from supply where suppliers_id = '$real_id' and date between '$date_from' and '$date_to'") or die ("query 1 incorrect.....");
                             list($id, $suppliers_id, $particulars, $quantity, $debit, $credit, $date) = mysqli_fetch_array($result2);
                             $num = mysqli_num_rows($result2); 
-                            if ($num < 1) 
-                                exit(); 
+                            // if ($num < 1) 
+                            //     exit(); 
                             while ($num > 0) {
                                 $display = mysqli_fetch_assoc($result2); 
                                 $t_id = $display !== null ? $display['suppliers_id'] : $suppliers_id; 
                                 $temp = "SELECT beat FROM suppliers WHERE id = '$t_id'"; 
                                 $temp_id = mysqli_query($connect, $temp); 
                                 $tem_display = $temp_id->fetch_assoc(); 
-                                $tem_beat = $tem_display['beat']; 
+                                list ($beat) = mysqli_fetch_array($temp_id); 
+                                $tem_beat = $tem_display !== null ? $tem_display['beat'] : $beat; 
                         
                                 $tem_id = $display !== null ? $display['id'] : $id; 
                                 $t_date = $display !== null ? $display['date'] : $date; 

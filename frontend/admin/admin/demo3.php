@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>How to use Jquery DataTables in PHP?- Nicesnippets.com</title>  
     <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css"/> -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.css"/>
 </head>
@@ -53,6 +52,7 @@
             if (move_uploaded_file($_FILES["excel_file"]["tmp_name"], $target_file)) {
                 //   echo "The file ". htmlspecialchars( basename( $_FILES["excel_file"]["name"])). " has been uploaded.";
                 $index = 0; 
+                $num_of_errors = 0; 
                 $inputFilePath = 'files/'.$filename;
                 $spreadsheet = IOFactory::load($inputFilePath);
                 $sheet = $spreadsheet->getActiveSheet();
@@ -68,21 +68,26 @@
                     // echo "<script>alert('$rowData[0]'); </script>";
 
                     $result1 = mysqli_query($con,"select * from suppliers where CustomerCode='$rowData[1]' and name ='$rowData[2]'") or die ("query 1 incorrect.....");
-                    $re = mysqli_fetch_assoc($result1); 
-                    $te_id = $re['id']; 
-                    $start_date = "1899-12-31"; 
-                    $date_real = date("Y-m-d", strtotime($start_date.'+'.$rowData[0].'days')); 
-                    mysqli_query($con, "insert into supply (suppliers_id, particulars, quantity, debit, credit, date, CustomerCode) values ('$te_id','$rowData[3]','$rowData[4]','$rowData[6]','$rowData[5]','$date_real','$rowData[1]')") or die ("query incorrect"); // 5:credit 6: description 8:date 4: debit  1: suppliers_id
-                    $index = 0; 
+                    if (mysqli_num_rows($result1) == 0) {
+                        $num_of_errors++; 
+                    }
+                    else {
+                        $re = mysqli_fetch_assoc($result1); 
+                        list($id) = mysqli_fetch_array($result1); 
+                        $te_id = $re !== null ? $re['id'] : $id; 
+                        $start_date = "1899-12-30"; 
+                        $date_real = date("Y-m-d", strtotime($start_date.'+'.$rowData[0].'days')); 
+                        mysqli_query($con, "insert into supply (suppliers_id, particulars, quantity, debit, credit, date, CustomerCode) values ('$te_id','$rowData[3]','$rowData[4]','$rowData[6]','$rowData[5]','$date_real','$rowData[1]')") or die ("query incorrect"); // 5:credit 6: description 8:date 4: debit  1: suppliers_id
+                        $index = 0; 
+                    }
                 }
-                echo "<div class='alert alert-success' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>New Customer Entry is added successfully!</div>";
-                
-                //   header('Location: demo1.php');
-                //   exit(); 
-
-
-
-            } else {
+                if ($num_of_errors !== 0) {
+                    echo "<div class='alert alert-danger' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>There are unregistered customers. Please register them first!</div>";
+                }
+                else
+                    echo "<div class='alert alert-success' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>New Customer Entry is added successfully!</div>";
+            } 
+            else {
                 echo "Sorry, there was an error uploading your file.";
             }
         }
@@ -151,6 +156,11 @@
         $real_id = 0; 
         $filter_result = []; 
         $style = 0; $name1 = ''; $to = ''; $from = ''; 
+
+        if (isset($_POST['myselect1'])) {
+            echo "<div class='success-message'>Operation completed successfully!</div>"; 
+
+        }
         if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
         
         $customer_name = $_POST['customer_name']; 
@@ -193,6 +203,7 @@
         if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save2'])) {
         $name1 = $_POST['myselect1']; 
         $date_from = $_POST['date_from']; 
+        $c_code = $_POST['customer_code_filter']; 
         $date_to = $_POST['date_to']; 
         $filter_id = $name1; 
         }
@@ -259,524 +270,528 @@
     ?>  
     <div class="container mt-5">
         <div class="row">
+            <div class="col-xl-3 col-lg-4">
+                
+            <!-- upload excel data -->     
 
-        <div class="col-xl-3 col-lg-4">
-            
-          <!-- upload excel data -->     
+            <form action="" method="post" type="form" name="form3" enctype="multipart/form-data">
+                    <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class = "col-md-12">
+                            <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Upload Excel Data</label>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <input class="form-control" type="file" id="customer_add_file" name="customer_add_file" >
+                            </div>
+                            </div>
+                            <div class = "col-md-12" style="display: flex; align-items: center; justify-content: center; ">
+                            <button type="submit" id="btn_save_excel_customer" name="btn_save_excel_customer" required class="btn btn-fill btn-primary" style="padding: 12px 10px !important">Insert Customer From Excel</button>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <input class="form-control" type="file" id="excel_file" name="excel_file" <?php if ($_SESSION['is_admin'] == 'NO') echo 'disabled' ?>>
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group" >
+                                <button type="submit" id="btn_save_excel" name="btn_save_excel" required <?php if ($_SESSION['is_admin'] == 'NO') echo 'disabled' ?>  class="btn btn-fill btn-primary" style="padding: 12px 10px !important">Upload Entry From Excel</button>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </form>
 
-          <form action="" method="post" type="form" name="form3" enctype="multipart/form-data">
+                <form action="" method="post" type="form" name="form" enctype="multipart/form-data">
+                    <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class = "col-md-12">
+                            <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Create New Customer</label>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Customer Code(optional)</label>
+                                    <input type="text" id="customer_code" name="customer_code" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Customer's Name</label>
+                                <input type="text" id="customer_name" name="customer_name" class="form-control">
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Beat(optional)</label>
+                                <input type="text" id="beat" name="beat" class="form-control" >
+                            </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" id="btn_save" name="btn_save" required class="btn btn-fill btn-primary">Create</button>
+                    </div>
+                    </div>
+                </form> 
+
+                <form action="" method="post" type="form" name="form1">
+                    <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class = "col-md-12">
+                            <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Create Entry Date</label>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="create_date" name="create_date" required class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="">CustomerCode(optional)</label>
+                                <input type="text" id="cus_code_entry" name="cus_code_entry" class="form-control">
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group select-wrapper">
+                                <label for="">Customer Name</label>
+                                <select name="myselect" class = "form-control" style = "padding-bottom: 0px" id = "myselect">
+                                <?php foreach ($result1 as $option) { ?>
+                                    <option value="" disabled selected  >Select Customer</option>
+                                    <option value="<?php echo $option['name']; ?>"><?php echo $option['name']; ?></option>
+                                <?php } ?>
+                                </select>
+                                <span class="select-icon">&nbsp;</span>
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="">Salesman(optional)</label>
+                                <input type="text" id="salesman" name="salesman" class="form-control">
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Description(optional)</label>
+                                <input type="text" id="description" name="description" class="form-control" >
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="">Credit</label>
+                                <input type="number" id="credit" name="credit" required class="form-control">
+                            </div>
+                            </div>
+                            <div class="col-md-12" style = "display: <?php if ($_SESSION['is_admin'] == 'NO') echo 'none' ?> ">
+                                <div class="form-group">
+                                    <label for="">Debit</label>
+                                    <input type="number" id="debit" name="debit" class="form-control" <?php if ($_SESSION['is_admin'] == 'YES') echo 'required' ?>>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" id="btn_save1" name="btn_save1" required class="btn btn-fill btn-primary">Submit</button>
+                    </div>
+                    </div>
+                </form>
+
+                <form action="" method="post" type="form" name="form2">
                 <div class="card">
-                  <div class="card-body">
-                      <div class="row">
+                    <div class="card-body">
+                        <div class="row">
                         <div class = "col-md-12">
-                          <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Upload Excel Data</label>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <input class="form-control" type="file" id="customer_add_file" name="customer_add_file" >
-                          </div>
-                        </div>
-                        <div class = "col-md-12" style="display: flex; align-items: center; justify-content: center; ">
-                          <button type="submit" id="btn_save_excel_customer" name="btn_save_excel_customer" required class="btn btn-fill btn-primary" style="padding: 12px 10px !important">Insert Customer From Excel</button>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <input class="form-control" type="file" id="excel_file" name="excel_file" >
-                          </div>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <button type="submit" id="btn_save_excel" name="btn_save_excel" required class="btn btn-fill btn-primary" style="padding: 12px 10px !important">Upload Entry From Excel</button>
-                          </div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-              </form>
-
-              <form action="" method="post" type="form" name="form" enctype="multipart/form-data">
-                <div class="card">
-                  <div class="card-body">
-                      <div class="row">
-                        <div class = "col-md-12">
-                          <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Create New Customer</label>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label>Customer Code(optional)</label>
-                            <input type="text" id="customer_code" name="customer_code" class="form-control">
-                          </div>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label>Customer's Name</label>
-                            <input type="text" id="customer_name" name="customer_name" class="form-control">
-                          </div>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label>Beat(optional)</label>
-                            <input type="text" id="beat" name="beat" class="form-control" >
-                          </div>
-                        </div>
-
-
-                      </div>
-                  </div>
-                  <div class="card-footer">
-                      <button type="submit" id="btn_save" name="btn_save" required class="btn btn-fill btn-primary">Create</button>
-                  </div>
-                </div>
-              </form> 
-
-              <form action="" method="post" type="form" name="form1">
-                <div class="card">
-                  <div class="card-body">
-                      <div class="row">
-                        <div class = "col-md-12">
-                          <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Create Entry Date</label>
+                            <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Show Customer Ledger</label>
                         </div>
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label>Date</label>
-                                <input type="date" id="create_date" name="create_date" required class="form-control" />
+                            <label for="">Customer Name</label>
+                            <select id = "myselect1" name="myselect1" class = "form-control" style = "padding-bottom: 0px" id = "myselect">
+                                <?php foreach ($result1 as $option) { ?>
+                                <option value="" disabled selected  >Select Customer</option>
+                                <option value="<?php echo $option['name']; ?>"><?php echo $option['name']; ?></option>
+                                <?php } ?>
+                            </select>
+                            <span class="select-icon">&nbsp;</span>
                             </div>
                         </div>
                         <div class="col-md-12">
-                          <div class="form-group">
-                            <label for="">CusotmerCode(optional)</label>
-                            <input type="text" id="cus_code_entry" name="cus_code_entry" class="form-control">
-                          </div>
+                            <div class="form-group">
+                                <label>Customer Code(optional)</label>
+                                <input type="text" id="customer_code_filter" name="customer_code_filter" class="form-control">
+                            </div>
+                        </div>            
+                        <div class="col-md-12">
+                            <div class="form-group">
+                            <label>From</label>
+                            <input type="date" id="date_from" name="date_from" required class="form-control">
+                            </div>
                         </div>
                         <div class="col-md-12">
-                          <div class="form-group select-wrapper">
-                            <label for="">Customer Name</label>
-                            <select name="myselect" class = "form-control" style = "padding-bottom: 0px" id = "myselect">
-                              <?php foreach ($result1 as $option) { ?>
-                                <option value="" disabled selected  >Select Customer</option>
-                                <option value="<?php echo $option['name']; ?>"><?php echo $option['name']; ?></option>
-                              <?php } ?>
-                            </select>
-                            <span class="select-icon">&nbsp;</span>
-                          </div>
+                            <div class="form-group">
+                            <label>To</label>
+                            <input type="date" id="date_to" name="date_to" required class="form-control">
+                            <input type="text" id="filter_name" name="filter_name" class="form-control" hidden>
+                            <input type="text" id="filter_from" name="filter_from" class="form-control" hidden>
+                            <input type="text" id="filter_to" name="filter_to" class="form-control" hidden>
+                            </div>
                         </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label for="">Salesman(optional)</label>
-                            <input type="text" id="salesman" name="salesman" class="form-control">
-                          </div>
                         </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label>Description(optional)</label>
-                            <input type="text" id="description" name="description" class="form-control" >
-                          </div>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label for="">Credit</label>
-                            <input type="number" id="credit" name="credit" required class="form-control">
-                          </div>
-                        </div>
-                        <div class="col-md-12">
-                          <div class="form-group">
-                            <label for="">Debit</label>
-                            <input type="number" id="debit" name="debit" required class="form-control">
-                          </div>
-                        </div>
-                      </div>
-                  </div>
-                  <div class="card-footer">
-                      <button type="submit" id="btn_save1" name="btn_save1" required class="btn btn-fill btn-primary">Submit</button>
-                  </div>
-                </div>
-              </form>
-
-              <form action="" method="post" type="form" name="form2">
-              <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                      <div class = "col-md-12">
-                        <label style = "color: #343a00; font-weight: 600; margin-bottom: 20px;  ">Show Customer Ledger</label>
-                      </div>
-                      <div class="col-md-12">
-                        <div class="form-group">
-                          <label for="">Customer Name</label>
-                          <select id = "myselect1" name="myselect1" class = "form-control" style = "padding-bottom: 0px" id = "myselect">
-                            <?php foreach ($result1 as $option) { ?>
-                              <option value="" disabled selected  >Select Customer</option>
-                              <option value="<?php echo $option['name']; ?>"><?php echo $option['name']; ?></option>
-                            <?php } ?>
-                          </select>
-                          <span class="select-icon">&nbsp;</span>
-                        </div>
-                      </div>
-
-                      <div class="col-md-12">
-                        <div class="form-group">
-                          <label>From</label>
-                          <input type="date" id="date_from" name="date_from" required class="form-control">
-                        </div>
-                      </div>
-                      <div class="col-md-12">
-                        <div class="form-group">
-                          <label>To</label>
-                          <input type="date" id="date_to" name="date_to" required class="form-control">
-                          <input type="text" id="filter_name" name="filter_name" class="form-control" hidden>
-                          <input type="text" id="filter_from" name="filter_from" class="form-control" hidden>
-                          <input type="text" id="filter_to" name="filter_to" class="form-control" hidden>
-                        </div>
-                      </div>
+                    </div>
+                    <div class="card-footer">
+                        <button onclick="set_filter_name()" type="submit" id="btn_save2" name="btn_save2" required class="btn btn-fill btn-primary">Show</button>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <button onclick="set_filter_name()" type="submit" id="btn_save2" name="btn_save2" required class="btn btn-fill btn-primary">Show</button>
-                </div>
-              </div>
-            </form>  
-        </div>
-
-        <div class="col-xl-9 col-lg-8">
-            <button
-                class="btn btn-primary w-50 mb-4"
-                type="button"
-                onclick="show_restore()"
-              >
-                Restore Customer
-              </button>
-              <div class="card">
-                <div class="card-body">
-                  <div class="row d-flex justify-content-between entry-head">
-                    <div class="col-1 text-center bg-primary">
-                      <h5 class="text-white">NO</h5>
-                    </div>
-                    <div class="col-3 text-center bg-primary">
-                      <h5 class="text-white">Customer Name</h5>
-                    </div>
-                    <div class="col-3 text-center bg-primary">
-                      <h5 class="text-white">Beat</h5>
-                    </div>
-                    <div class="col-2 text-center bg-primary">
-                      <h5 class="text-white">Amount</h5>
-                    </div>
-                    <div class="col-3 text-center bg-primary">
-                      <h5 class="text-white">Action</h5>
-                    </div>
-                  </div>
-
-                  <div class="table-responsive ps">
-                    <table class="table table-hover tablesorter " id="">
-                      <tbody>
-                        <?php 
-                          $result = mysqli_query($con,"select * from suppliers where deleted = 'N' Order By id DESC") or die ("query 1 incorrect.....");
-                          $num = mysqli_num_rows($result); 
-                          $no = 1; 
-                          while($num > 0)
-                          {	
-                            $amount = 0; 
-                            $row = mysqli_fetch_assoc($result); 
-                            $tem_id = $row['id']; 
-                            $tem_name = $row['name']; 
-                            $tem_beat = $row['beat']; 
-                                
-                            $result2 = mysqli_query($con,"select * from supply where suppliers_id = '$tem_id'") or die ("query 1 incorrect.....");
-                            $num_entry = mysqli_num_rows($result2); 
-                            while ($num_entry > 0) {
-                              $row2 = mysqli_fetch_assoc($result2); 
-                              $tem_c = $row2['credit']; 
-                              $tem_d = $row2['debit'];
-                              $amount = $amount + $tem_c - $tem_d;  
-                              $num_entry--; 
-                            }
-                            echo "<tr id = 'click_row$no' ><td id = 'row_no'>$no</td><td id = 'row_name'>$tem_name</td><td id = 'row_beat'>$tem_beat</td><td id = 'row_amount'>$amount</td>
-                            <td id = 'row_action'>
-                            <a class = 'btn btn-warning' onClick = 'openModal(`$tem_name`,`$tem_beat`,`$tem_id`)'>Edit</a>
-                            <a class = 'btn btn-danger' onClick = 'confirm_del(`$tem_id`)'>Delete</a></td>
-                            </tr>";
-                            $num--; 
-                            $no++; 
-                          }
-                          ?>
-                      </tbody>
-                    </table>
-                    <div class="ps__rail-x" style="left: 0px; bottom: 0px;">
-                        <div class="ps__thumb-x" tabindex="0" style="left: 0px; width: 0px;">
-                    </div>
-                </div>  
+                </form>  
             </div>
-                <div class="row d-flex justify-content-between entry-head">
-                    <div class="col-5 text-center bg-primary" style="margin: 0px 10px 10px 10px ; ">
-                        <h5 class="text-white">Total Balance</h5>
+
+            <div class="col-xl-9 col-lg-8">
+                <button
+                    class="btn btn-primary w-50 mb-4"
+                    type="button"
+                    onclick="show_restore()"
+                >
+                    Restore Customer
+                </button>
+                <div class="card">
+                    <div class="card-body">
+                    <div class="row d-flex justify-content-between entry-head">
+                        <div class="col-1 text-center bg-primary">
+                        <h5 class="text-white">NO</h5>
+                        </div>
+                        <div class="col-3 text-center bg-primary">
+                        <h5 class="text-white">Customer Name</h5>
+                        </div>
+                        <div class="col-3 text-center bg-primary">
+                        <h5 class="text-white">Beat</h5>
+                        </div>
+                        <div class="col-2 text-center bg-primary">
+                        <h5 class="text-white">Amount</h5>
+                        </div>
+                        <div class="col-3 text-center bg-primary">
+                        <h5 class="text-white">Action</h5>
+                        </div>
                     </div>
-                    <div class="col-5 text-center bg-primary" style="margin: 0px 10px 10px 10px; ">
-                        <h5 class="text-white">
+
+                    <div class="table-responsive ps">
+                        <table class="table table-hover tablesorter " id="">
+                        <tbody>
                             <?php 
-                                $result1 = mysqli_query($con,"select sum(credit) as credit from supply") or die ("query 1 incorrect.....");
-                                $result2 = mysqli_query($con,"select sum(debit) as debit from supply") or die ("query 1 incorrect.....");
-                                $dis_tra1 = mysqli_fetch_assoc($result1); 
-                                $dis_tra2 = mysqli_fetch_assoc($result2); 
-                                $d = $dis_tra1['credit'] - $dis_tra2['debit']; 
-                                echo $d; 
+                            $result = mysqli_query($con,"select * from suppliers where deleted = 'N' Order By id DESC") or die ("query 1 incorrect.....");
+                            $num = mysqli_num_rows($result); 
+                            $no = 1; 
+                            while($num > 0)
+                            {	
+                                $amount = 0; 
+                                $row = mysqli_fetch_assoc($result); 
+                                $tem_id = $row['id']; 
+                                $tem_name = $row['name']; 
+                                $tem_beat = $row['beat']; 
+                                    
+                                $result2 = mysqli_query($con,"select * from supply where suppliers_id = '$tem_id'") or die ("query 1 incorrect.....");
+                                $num_entry = mysqli_num_rows($result2); 
+                                while ($num_entry > 0) {
+                                $row2 = mysqli_fetch_assoc($result2); 
+                                $tem_c = $row2['credit']; 
+                                $tem_d = $row2['debit'];
+                                $amount = $amount + $tem_c - $tem_d;  
+                                $num_entry--; 
+                                }
+                                echo "<tr id = 'click_row$no' ><td id = 'row_no'>$no</td><td id = 'row_name'>$tem_name</td><td id = 'row_beat'>$tem_beat</td><td id = 'row_amount'>$amount</td>
+                                <td id = 'row_action'>
+                                <a class = 'btn btn-warning' onClick = 'openModal(`$tem_name`,`$tem_beat`,`$tem_id`)'>Edit</a>
+                                <a class = 'btn btn-danger' onClick = 'confirm_del(`$tem_id`)'>Delete</a></td>
+                                </tr>";
+                                $num--; 
+                                $no++; 
+                            }
                             ?>
-                        </h5>
-                    </div>
+                        </tbody>
+                        </table>
+                        <div class="ps__rail-x" style="left: 0px; bottom: 0px;">
+                            <div class="ps__thumb-x" tabindex="0" style="left: 0px; width: 0px;">
+                        </div>
+                    </div>  
                 </div>
-            </div>                       
-            
-            
-            <div class="modal" id = "myModal" style="display: none; ">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-body">
-                  <form action="" method="post" type = "form" name = "form4">
-                    <div class="mb-3">
-                      <label for="username" class="form-label"
-                        >Supplier Name</label
-                      >
-                      <input
-                        class="form-control"
-                        type="text"
-                        id="edit_name"
-                        name="edit_name"
-                        required=""
-                      />
+                    <div class="row d-flex justify-content-between entry-head">
+                        <div class="col-5 text-center bg-primary" style="margin: 0px 10px 10px 10px ; ">
+                            <h5 class="text-white">Total Balance</h5>
+                        </div>
+                        <div class="col-5 text-center bg-primary" style="margin: 0px 10px 10px 10px; ">
+                            <h5 class="text-white">
+                                <?php 
+                                    $result1 = mysqli_query($con,"select sum(credit) as credit from supply") or die ("query 1 incorrect.....");
+                                    $result2 = mysqli_query($con,"select sum(debit) as debit from supply") or die ("query 1 incorrect.....");
+                                    $dis_tra1 = mysqli_fetch_assoc($result1); 
+                                    $dis_tra2 = mysqli_fetch_assoc($result2); 
+                                    $d = $dis_tra1['credit'] - $dis_tra2['debit']; 
+                                    echo $d; 
+                                ?>
+                            </h5>
+                        </div>
                     </div>
-
-                    <div class="mb-2">
-                      <label for="beat" class="form-label">Beat</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="edit_beat"
-                        name="edit_beat"
-                        required=""
-                      />
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="temp_id"
-                        name="temp_id"
-                        hidden
-                      />
-                      
-                    </div>
-
-                    <div class="mb-3 text-center">
-                      <div
-                        class="spinner-border text-primary m-2 text-center m-auto d-block mb-4 mt-4"
-                        role="status"
-                      >
-                      </div>
-                        <button
-                          class="btn btn-primary"
-                          type="submit"
-                          id = "btn_update"
-                          name = "btn_update"
+                </div>                       
+                
+                
+                <div class="modal" id = "myModal" style="display: none; ">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                    <form action="" method="post" type = "form" name = "form4">
+                        <div class="mb-3">
+                        <label for="username" class="form-label"
+                            >Supplier Name</label
                         >
-                          Update
-                        </button>
-                      
-                      <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick="closeModal()"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- delte entry main -->     
-          <div class="modal" id = "myModal_delete" style="display: none; ">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-body">
-                  <form action="" method="post" type = "form" name = "form5">
-                    <div class="mb-2">
-                      <label for="del" class="form-label">Do you really want to delete it? </label>
-                    </div>
-                    <div class="mb-3 text-center">
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="del_id"
-                        name="del_id"
-                        hidden
-                      />
-                      <button
-                        class="btn btn-primary"
-                        type="submit"
-                        id = "btn_delete"
-                        name = "btn_delete"
-                      >
-                        Delete
-                      </button>
-                      
-                      <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick="close_del_modal()"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="edit_name"
+                            name="edit_name"
+                            required=""
+                        />
+                        </div>
 
-          <!-- update entry modal -->     
+                        <div class="mb-2">
+                        <label for="beat" class="form-label">Beat</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="edit_beat"
+                            name="edit_beat"
+                            required=""
+                        />
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="temp_id"
+                            name="temp_id"
+                            hidden
+                        />
+                        
+                        </div>
 
-          <div class="modal" id = "edit_entry" style="display: none; ">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-body">
-                  <form action="" method="post" type = "form" name = "form4">
-                    <label for="update" class="form-label"
-                        >Update Entry</label
-                      >
-                    <div class="mb-3">
-                      <label for="username" class="form-label"
-                        >Date</label
-                      >
-                      <input
-                        class="form-control"
-                        type="date"
-                        id="update_date"
-                        name="update_date"
-                        required=""
-                      />
-                    </div>
-
-                    <div class="mb-2">
-                      
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="tem_update_id"
-                        name="tem_update_id"
-                        hidden
-                      />
-                    </div>
-                    <div class="mb-3">
-                      <label for="salesman" class="form-label"
-                        >Salesman(optional)</label
-                      >
-                      <input
-                        class="form-control"
-                        type="text"
-                        id="update_sal"
-                        name="update_sal"
-                        required=""
-                      />
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="credit" class="form-label"
-                        >Credit</label
-                      >
-                      <input
-                        class="form-control"
-                        type="number"
-                        id="update_credit"
-                        name="update_credit"
-                        required=""
-                      />
-                    </div>
-                    <div class="mb-3">
-                      <label for="debit" class="form-label"
-                        >Debit</label
-                      >
-                      <input
-                        class="form-control"
-                        type="number"
-                        id="update_debit"
-                        name="update_debit"
-                        required=""
-                      />
-                    </div>
-                    <div class="mb-3 text-center">
-                      </div>
-                        <button
-                          class="btn btn-primary"
-                          type="submit"
-                          id = "btn_entry_update"
-                          name = "btn_entry_update"
+                        <div class="mb-3 text-center">
+                        <div
+                            class="spinner-border text-primary m-2 text-center m-auto d-block mb-4 mt-4"
+                            role="status"
                         >
-                          Update
-                        </button>
-                      
-                      <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick="close_entry_modal()"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>            
-          <!-- restore entry modal -->       
-          <div class="modal" id = "restoreModal" style="display: none; ">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-body">
-                  <form action="" method="post" type = "form" name = "form4">
-                    <div class="mb-3">
-                      <label for="username" class="form-label"
-                        >Input Supplier Name to restore</label
-                      >
-                      <input
-                        class="form-control"
-                        type="text"
-                        id="restore_name"
-                        name="restore_name"
-                        required=""
-                      />
-                    </div>
-
-                    
-                    <div class="mb-3 text-center">
-                      <div
-                        class="spinner-border text-primary m-2 text-center m-auto d-block mb-4 mt-4"
-                        role="status"
-                      >
-                      </div>
+                        </div>
+                            <button
+                            class="btn btn-primary"
+                            type="submit"
+                            id = "btn_update"
+                            name = "btn_update"
+                            >
+                            Update
+                            </button>
+                        
                         <button
-                          class="btn btn-primary"
-                          type="submit"
-                          id = "btn_restore"
-                          name = "btn_restore"
+                            class="btn btn-primary"
+                            type="button"
+                            onclick="closeModal()"
                         >
-                          Restore
+                            Close
                         </button>
-                      
-                      <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick="closeRestoreModal()"
-                      >
-                        Close
-                      </button>
+                        </div>
+                    </form>
                     </div>
-                  </form>
                 </div>
-              </div>
+                </div>
             </div>
-        </div>  
-        <?php
-            if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save2'])){
-                include "demo4.php";
-            }
-        ?>
-          </div>
+            <!-- delte entry main -->     
+            <div class="modal" id = "myModal_delete" style="display: none; ">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                    <form action="" method="post" type = "form" name = "form5">
+                        <div class="mb-2">
+                        <label for="del" class="form-label">Do you really want to delete it? </label>
+                        </div>
+                        <div class="mb-3 text-center">
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="del_id"
+                            name="del_id"
+                            hidden
+                        />
+                        <button
+                            class="btn btn-primary"
+                            type="submit"
+                            id = "btn_delete"
+                            name = "btn_delete"
+                        >
+                            Delete
+                        </button>
+                        
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            onclick="close_del_modal()"
+                        >
+                            Cancel
+                        </button>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- update entry modal -->     
+
+            <div class="modal" id = "edit_entry" style="display: none; ">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                    <form action="" method="post" type = "form" name = "form4">
+                        <label for="update" class="form-label"
+                            >Update Entry</label
+                        >
+                        <div class="mb-3">
+                        <label for="username" class="form-label"
+                            >Date</label
+                        >
+                        <input
+                            class="form-control"
+                            type="date"
+                            id="update_date"
+                            name="update_date"
+                            required=""
+                        />
+                        </div>
+
+                        <div class="mb-2">
+                        
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="tem_update_id"
+                            name="tem_update_id"
+                            hidden
+                        />
+                        </div>
+                        <div class="mb-3">
+                        <label for="salesman" class="form-label"
+                            >Salesman(optional)</label
+                        >
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="update_sal"
+                            name="update_sal"
+                            required=""
+                        />
+                        </div>
+
+                        <div class="mb-3">
+                        <label for="credit" class="form-label"
+                            >Credit</label
+                        >
+                        <input
+                            class="form-control"
+                            type="number"
+                            id="update_credit"
+                            name="update_credit"
+                            required=""
+                        />
+                        </div>
+                        <div class="mb-3">
+                        <label for="debit" class="form-label"
+                            >Debit</label
+                        >
+                        <input
+                            class="form-control"
+                            type="number"
+                            id="update_debit"
+                            name="update_debit"
+                            required=""
+                        />
+                        </div>
+                        <div class="mb-3 text-center">
+                        </div>
+                            <button
+                            class="btn btn-primary"
+                            type="submit"
+                            id = "btn_entry_update"
+                            name = "btn_entry_update"
+                            >
+                            Update
+                            </button>
+                        
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            onclick="close_entry_modal()"
+                        >
+                            Close
+                        </button>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                </div>
+            </div>            
+            <!-- restore entry modal -->       
+            <div class="modal" id = "restoreModal" style="display: none; ">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                    <form action="" method="post" type = "form" name = "form4">
+                        <div class="mb-3">
+                        <label for="username" class="form-label"
+                            >Input Supplier Name to restore</label
+                        >
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="restore_name"
+                            name="restore_name"
+                            required=""
+                        />
+                        </div>
+
+                        
+                        <div class="mb-3 text-center">
+                        <div
+                            class="spinner-border text-primary m-2 text-center m-auto d-block mb-4 mt-4"
+                            role="status"
+                        >
+                        </div>
+                            <button
+                            class="btn btn-primary"
+                            type="submit"
+                            id = "btn_restore"
+                            name = "btn_restore"
+                            >
+                            Restore
+                            </button>
+                        
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            onclick="closeRestoreModal()"
+                        >
+                            Close
+                        </button>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                </div>
+            </div>  
+            <?php
+                if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save2'])){
+                    include "demo4.php";
+                }
+            ?>
+        </div>
     </div>
 
     <!-- Script -->
@@ -864,10 +879,107 @@
     <script>  
         $(document).ready(function(){  
             $('#employee_data').DataTable();  
-            $('#alert_message').fadeOut(1000);  
+            $('#alert_message').fadeOut(5000);  
             document.getElementById('create_date').valueAsDate = new Date();
+
+            // $('#mySelect').change(function() {
+            //     var selectedOption = $(this).children('option:selected').val();
+            //     alert(selectedOption); 
+            //     // Do something with the selected option value
+            // });
         });  
+        const rows = document.querySelectorAll('tr');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                var sync_state = false; 
+                var id = row.id; 
+                var element = document.getElementById(id); 
+                const cells = row.cells;
+                const no = cells[0].innerText;
+                const name = cells[1].innerText;
+                const beat = cells[2].innerText;
+                const amount = cells[3].innerText;
+                // const action = cell[4].innerHTML; 
+                newrow = document.createElement("tr");
+                newrow.setAttribute("id", 'tr' + id);  
+                newrow.innerHTML = "<label>beat: "+ beat + "</label><label>amount: " + amount + "</label><label>Action: </label><a class = 'btn btn-warning' onClick = 'openModal("+name+","+beat+","+no+")'>Edit</a><a class = 'btn btn-danger' onClick = 'confirm_del("+ no +")'>Delete</a>" ;
+                row.getAttribute("disabled") == 'false' || row.getAttribute("disabled") == undefined ? 
+                (element.parentNode.insertBefore(newrow, element.nextSibling), row.setAttribute("disabled", true)) :
+                ($("#tr" + id).remove(), row.setAttribute("disabled", false));
+            });
+        });
+
+
+        
+        const mySelect = document.getElementById("myselect1");
+        const mySelect_first = document.getElementById("myselect");
+        const co_value = document.getElementById("customer_code_filter"); 
+        const co_value2 = document.getElementById("cus_code_entry"); 
+        mySelect.addEventListener("change", function() {
+            $.ajax({
+                url: 'temp.php', // Specify the path to your PHP script here
+                type: 'POST',
+                data: {
+                    param: mySelect.value
+                }, 
+                dataType: 'json',
+                success: function(data) {
+                    co_value.value = data; 
+                }
+            });
+        });
+        mySelect_first.addEventListener("change", function() {
+            $.ajax({
+                url: 'temp.php', // Specify the path to your PHP script here
+                type: 'POST',
+                data: {
+                    param: mySelect_first.value
+                }, 
+                dataType: 'json',
+                success: function(data) {
+                    co_value2.value = data; 
+                }
+            });
+        });
+
+
+        let inputElement = document.getElementById("cus_code_entry");
+        let inputElement2 = document.getElementById("customer_code_filter");
+
+        inputElement.addEventListener("input", function() {
+            let inputText = inputElement.value.toLowerCase();
+            let options = mySelect_first.options;
+            $.ajax({
+                url: 'temp1.php', // Specify the path to your PHP script here
+                type: 'POST',
+                data: {
+                    param1: inputText
+                }, 
+                dataType: 'json',
+                success: function(data) {
+                    mySelect_first.value = data ? data : "";
+                }
+            });
+        });
+        inputElement2.addEventListener("input", function() {
+            let inputText = inputElement2.value.toLowerCase();
+            let options = mySelect.options;
+            $.ajax({
+                url: 'temp1.php', // Specify the path to your PHP script here
+                type: 'POST',
+                data: {
+                    param1: inputText
+                }, 
+                dataType: 'json',
+                success: function(data) {
+                    mySelect.value = data ? data : "";
+                }
+            });
+        });
     </script>
-    
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap-material-design.min.js"></script>
+    <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+    <script src="./assets/js/material-dashboard.js?v=2.1.0"></script>
 </body>  
 </html> 
