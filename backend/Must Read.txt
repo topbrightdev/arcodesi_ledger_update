@@ -1,0 +1,27 @@
+Steps To Run this Project
+
+Make Sure Your Domain is Running a Valid SSL Certificate
+
+1. Upload the  zip file to Cpanel.
+2. Extract the zip file .
+3. PHP VERSION 8.0 IS REQUIRED FOR THIS PROJECT(enable it on your Cpanel).
+4. Create MySql Database name including database user and password (Using mysql database wizard On Cpanel You can follow the steps in this url  https://www.tutorialspoint.com/cpanel/cpanel_mysql_database_wizard.htm to setup the mysql database)  Note: The database name,username,password set will be useful in  step 6 to 9.
+5. Upload the api.sql file (which can be found in the SQL Folder) to the Mysql Database You Create On Step 4.
+
+        To Connect The Mysql database to the project.
+
+6. open db.php file  which can be found in the controller folder.
+7. CHANGE databasename to the database name you set on step 4.
+8. CHANGE username to the database username you set on step 4.
+9. CHANGE password to the database password you set on step 4.
+10. Note You are to perform step 7,8 and 9 on both connectWriteDB AND connectReadDB() function.
+
+
+
+AFTER FOLLOWING THE ABOVE STEPS 
+
+ADD YOUR DOMAIN TO THE FRONTEND APP
+
+Then Use the following Credentials as login(which can also  be changed in the full app):
+email= ashwithks@gmail.com
+password = 1234567
