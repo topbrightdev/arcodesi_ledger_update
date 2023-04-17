@@ -1082,7 +1082,55 @@ pre code {
   margin-right: auto;
   margin-left: auto;
 }
-
+@media (max-width: 400px) {
+  table tbody tr td#row_beat {
+    display: none !important;
+  }
+  table tbody tr td#row_amount {
+    display: none !important;
+  }
+  table tbody tr td#row_action {
+    display: none !important;
+  }
+  .card #re_title {
+    justify-content: space-around !important;
+  }
+  .card #re_title #re_beat { 
+    display: none;
+  }
+  .card #re_title #re_amount { 
+    display: none;
+  }
+  .card #re_title #re_action { 
+    display: none;
+  }
+  #employee_data thead tr th#tt_salesman {
+    display: none !important;
+  }
+  #employee_data thead tr th#tt_beat {
+    display: none !important;
+  }
+  #employee_data thead tr th#tt_action {
+    display: none !important;
+  }
+  #employee_data tbody tr td#ttt_quantity {
+    display: none !important;
+  }
+  #employee_data tbody tr td#ttt_beat {
+    display: none !important;
+  }
+  #employee_data tbody tr td#ttt_action  {
+    display: none !important;
+  }
+}
+/* @media (max-width: 360px) {
+  #employee_data tbody tr td#ttt_id {
+    display: none !important;
+  }
+  #employee_data thead tr th#tt_id {
+    display: none !important;
+  }
+} */
 @media (min-width: 576px) {
   .container {
     max-width: 540px;

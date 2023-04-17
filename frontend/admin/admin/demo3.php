@@ -66,7 +66,14 @@
                         $index++; 
                     }
                     // echo "<script>alert('$rowData[0]'); </script>";
-
+                    if (preg_match('/[\'^£$%*}{@#~?><>,|=_+¬-]/', $rowData[1])){
+                        echo "<div class='alert alert-warning' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>CustomerCode:$rowData[0] contains special character. Please modify it!</div>";
+                        exit(); 
+                    }
+                    if (preg_match('/[\'^£$%*}{@#~?><>,|=_+¬-]/', $rowData[2])){
+                        echo "<div class='alert alert-warning' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>Customername:$rowData[1] contains special character. Please modify it!</div>";
+                        exit(); 
+                    }
                     $result1 = mysqli_query($con,"select * from suppliers where CustomerCode='$rowData[1]' and name ='$rowData[2]'") or die ("query 1 incorrect.....");
                     if (mysqli_num_rows($result1) == 0) {
                         $num_of_errors++; 
@@ -77,7 +84,7 @@
                         $te_id = $re !== null ? $re['id'] : $id; 
                         $start_date = "1899-12-30"; 
                         $date_real = date("Y-m-d", strtotime($start_date.'+'.$rowData[0].'days')); 
-                        mysqli_query($con, "insert into supply (suppliers_id, particulars, quantity, debit, credit, date, CustomerCode) values ('$te_id','$rowData[3]','$rowData[4]','$rowData[6]','$rowData[5]','$date_real','$rowData[1]')") or die ("query incorrect"); // 5:credit 6: description 8:date 4: debit  1: suppliers_id
+                        mysqli_query($con, "insert into supply (suppliers_id, particulars, quantity, debit, credit, date, CustomerCode) values ('$te_id','$rowData[3]','$rowData[4]','$rowData[5]','$rowData[6]','$date_real','$rowData[1]')") or die ("query incorrect"); // 5:credit 6: description 8:date 4: debit  1: suppliers_id
                         $index = 0; 
                     }
                 }
@@ -117,7 +124,7 @@
         } 
         else {
             if (move_uploaded_file($_FILES["customer_add_file"]["tmp_name"], $target_file)) {
-                echo "The file ". htmlspecialchars( basename( $_FILES["customer_add_file"]["name"])). " has been uploaded.";
+                // echo "The file ". htmlspecialchars( basename( $_FILES["customer_add_file"]["name"])). " has been uploaded.";
                 $index = 0; 
                 $inputFilePath = 'files/'.$filename;
                 $spreadsheet = IOFactory::load($inputFilePath);
@@ -131,8 +138,17 @@
                         $rowData[$index] = $cellValue;
                         $index++; 
                     }
+                    if (preg_match('/[\'^£$%*}{@#~?><>,|=_+¬-]/', $rowData[0])){
+                        echo "<div class='alert alert-warning' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>CustomerCode:$rowData[0] contains special character. Please modify it!</div>";
+                        exit(); 
+                    }
+                    if (preg_match('/[\'^£$%*}{@#~?><>,|=_+¬-]/', $rowData[1])){
+                        echo "<div class='alert alert-warning' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>Customername:$rowData[1] contains special character. Please modify it!</div>";
+                        exit(); 
+                    }
                     $result1 = mysqli_query($con,"select * from suppliers where CustomerCode='$rowData[0]' and name ='$rowData[1]'") or die ("query 1 incorrect.....");
                     if (mysqli_num_rows($result1) !== 0) {
+                        
                         echo "<div class='alert alert-warning' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>Already exists!</div>";
                         exit();
                     }
@@ -141,11 +157,6 @@
                 }
                 echo "<div class='alert alert-success' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>New Customer is added successfully!</div>";
                 
-                //   header('Location: demo1.php');
-                //   exit(); 
-
-
-
             } else {
                 echo "Sorry, there was an error uploading your file.";
             }
@@ -157,10 +168,7 @@
         $filter_result = []; 
         $style = 0; $name1 = ''; $to = ''; $from = ''; 
 
-        if (isset($_POST['myselect1'])) {
-            echo "<div class='success-message'>Operation completed successfully!</div>"; 
-
-        }
+        
         if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
         
         $customer_name = $_POST['customer_name']; 
@@ -461,26 +469,26 @@
                 </button>
                 <div class="card">
                     <div class="card-body">
-                    <div class="row d-flex justify-content-between entry-head">
-                        <div class="col-1 text-center bg-primary">
+                    <div class="row d-flex justify-content-between entry-head" id = "re_title">
+                        <div class="col-1 text-center bg-primary" id = "re_no">
                         <h5 class="text-white">NO</h5>
                         </div>
-                        <div class="col-3 text-center bg-primary">
+                        <div class="col-3 text-center bg-primary" id = "re_name">
                         <h5 class="text-white">Customer Name</h5>
                         </div>
-                        <div class="col-3 text-center bg-primary">
+                        <div class="col-3 text-center bg-primary" id = "re_beat">
                         <h5 class="text-white">Beat</h5>
                         </div>
-                        <div class="col-2 text-center bg-primary">
+                        <div class="col-2 text-center bg-primary" id = "re_amount">
                         <h5 class="text-white">Amount</h5>
                         </div>
-                        <div class="col-3 text-center bg-primary">
+                        <div class="col-3 text-center bg-primary" id = "re_action">
                         <h5 class="text-white">Action</h5>
                         </div>
                     </div>
 
                     <div class="table-responsive ps">
-                        <table class="table table-hover tablesorter " id="">
+                        <table class="table table-hover tablesorter " id="hello">
                         <tbody>
                             <?php 
                             $result = mysqli_query($con,"select * from suppliers where deleted = 'N' Order By id DESC") or die ("query 1 incorrect.....");
@@ -500,7 +508,8 @@
                                 $row2 = mysqli_fetch_assoc($result2); 
                                 $tem_c = $row2['credit']; 
                                 $tem_d = $row2['debit'];
-                                $amount = $amount + $tem_c - $tem_d;  
+                                $amount = $amount - $tem_c + $tem_d;  
+                                // $amount = $amount + $tem_d;  
                                 $num_entry--; 
                                 }
                                 echo "<tr id = 'click_row$no' ><td id = 'row_no'>$no</td><td id = 'row_name'>$tem_name</td><td id = 'row_beat'>$tem_beat</td><td id = 'row_amount'>$amount</td>
@@ -530,7 +539,7 @@
                                     $result2 = mysqli_query($con,"select sum(debit) as debit from supply") or die ("query 1 incorrect.....");
                                     $dis_tra1 = mysqli_fetch_assoc($result1); 
                                     $dis_tra2 = mysqli_fetch_assoc($result2); 
-                                    $d = $dis_tra1['credit'] - $dis_tra2['debit']; 
+                                    $d = $dis_tra2['debit'] - $dis_tra1['credit'] ; 
                                     echo $d; 
                                 ?>
                             </h5>
@@ -881,14 +890,8 @@
             $('#employee_data').DataTable();  
             $('#alert_message').fadeOut(5000);  
             document.getElementById('create_date').valueAsDate = new Date();
-
-            // $('#mySelect').change(function() {
-            //     var selectedOption = $(this).children('option:selected').val();
-            //     alert(selectedOption); 
-            //     // Do something with the selected option value
-            // });
         });  
-        const rows = document.querySelectorAll('tr');
+        const rows = document.querySelectorAll('#hello tbody tr');
         rows.forEach(row => {
             row.addEventListener('click', () => {
                 var sync_state = false; 
@@ -908,9 +911,9 @@
                 ($("#tr" + id).remove(), row.setAttribute("disabled", false));
             });
         });
-
-
         
+        // automatic fill of corresponding customercode for customername
+        // automatic fill of corresponding customername for customercode
         const mySelect = document.getElementById("myselect1");
         const mySelect_first = document.getElementById("myselect");
         const co_value = document.getElementById("customer_code_filter"); 
@@ -977,6 +980,34 @@
             });
         });
     </script>
+    <script>
+        const search_row = document.querySelectorAll("#employee_data tbody tr");
+        search_row.forEach(row => {
+            row.addEventListener('click', () => {
+                var id = row.id; 
+                var element = document.getElementById(id); 
+                const cells = row.cells;
+                const id1 = cells[0].innerText;
+                const date = cells[1].innerText;
+                const salesman = cells[2].innerText;
+                const beat = cells[3].innerText;
+                const debit = cells[4].innerText;
+                const credit = cells[5].innerText;
+                const amount = cells[6].innerText;
+                // const action = cell[4].innerHTML; 
+                newrow = document.createElement("tr");
+                newrow.setAttribute("id", 'tr1' + id);  
+                document.getElementById(id); 
+
+                newrow.innerHTML = "<td>salesman: " + salesman + "</td><td>beat: " + beat + "</td><td>Action: </label><a class = 'btn btn-warning' onClick = 'open_entry_modal("+id1+","+date+","+salesman+","+beat+","+debit+","+credit+")'>Edit</a><a class = 'btn btn-danger' onClick = 'confirm_entry_del("+ id1 +")'>Del</a>" ;
+                row.getAttribute("disabled") == 'false' || row.getAttribute("disabled") == undefined ? 
+                (element.parentNode.insertBefore(newrow, element.nextSibling), row.setAttribute("disabled", true)) :
+                ($("#tr1" + id).remove(), row.setAttribute("disabled", false));
+            });
+        });
+
+    </script>
+
     <script src="./assets/js/core/popper.min.js"></script>
     <script src="./assets/js/core/bootstrap-material-design.min.js"></script>
     <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>

@@ -5,7 +5,23 @@
                 <div class="container-fluid">
                     <div class="navbar-wrapper">
                         <a class="navbar-brand" href="javascript:void(0)"> 
-                        
+                        <?php  
+                            if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')   
+                                $url = "https://";   
+                            else  
+                                $url = "http://";   
+                            $url.= $_SERVER['HTTP_HOST'];   
+                            
+                            $url.= $_SERVER['REQUEST_URI'];    
+                            if (strpos($url, "demo3") == true)
+                                echo "Entry";  
+                            else if (strpos($url, "index") == true)
+                                echo "Dashboard";  
+                            else if (strpos($url, "addsuppliers") == true)
+                                echo "Report";  
+                            else if (strpos($url, "profile") == true)
+                                echo "Settings";  
+                        ?>   
                         
                         </a>
                         

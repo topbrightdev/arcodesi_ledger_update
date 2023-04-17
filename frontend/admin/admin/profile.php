@@ -32,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['re_password']))
       {
         $pass = md5($re_pass);
         $update_pwd = mysqli_query($con,"UPDATE tblusers set password = '$pass' where email ='$email'");
-        echo "<script>alert('Update Sucessfully'); </script>";
+          echo "<div class='alert alert-success' id = 'alert_message' style = 'width: 200px; right: 0px; top: 100px; position: absolute;'>New Customer Entry is added successfully!</div>";
+          header('Location: profile.php'); 
       }
       else
       {

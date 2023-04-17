@@ -170,5 +170,14 @@
     <script src="/assets/js/app.min.js"></script>
 
   <script type="text/javascript" src="/js/chunk-vendors.js"></script><script type="text/javascript" src="/js/app.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.js"></script>
+    <script>  
+        $(document).ready(function(){  
+            $('#alert_message').fadeOut(4000);  
+        });  
+    </script>
+
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
 </html>

@@ -10,14 +10,14 @@
 
                     <thead>  
                         <tr style="text-align: center;">
-                            <th class="col-1">#ID</th>  
+                            <th class="col-1" id = "tt_id">#ID</th>  
                             <th class="col-2">Date</th>
-                            <th class="col-1">Salesman</th>  
-                            <th class="col-1">Beat</th>  
+                            <th class="col-1" id = "tt_salesman">Salesman</th>  
+                            <th class="col-1" id = "tt_beat">Beat</th>  
                             <th class="col-1">Debit</th>  
                             <th class="col-1">Credit</th>  
                             <th class="col-1">Amount</th>    
-                            <th class="col-4">Action</th>  
+                            <th class="col-4" id = "tt_action">Action</th>  
                         </tr>  
                     </thead>
                     <tbody>
@@ -49,23 +49,24 @@
                                 $t_quantity = $display !== null ? $display['quantity'] : $quantity; 
                                 $t_debit = $display !== null ? $display['debit'] : $debit; 
                                 $t_credit = $display !== null ? $display['credit'] : $credit; 
-                                $t_amount = $t_credit - $t_debit; 
-                                echo"<tr style='text-align: center';>  
-                                        <td>$tem_id</td>  
+                                $t_amount = $t_debit - $t_credit; 
+                                echo"<tr style='text-align: center'; id = 'search$num' class = 'sea'>  
+                                        <td id = 'ttt_id'>$tem_id</td>  
                                         <td>$t_date</td>  
-                                        <td>$t_quantity</td>  
-                                        <td>$tem_beat</td>  
-                                        <td>$t_debit</td>  
+                                        <td id = 'ttt_quantity'>$t_quantity</td>  
+                                        <td id = 'ttt_beat'>$tem_beat</td>  
                                         <td>$t_credit</td>  
+                                        <td>$t_debit</td>  
                                         <td>$t_amount</td>  
-                                        <td>
+                                        <td id = 'ttt_action'>
                                         <a class = 'btn btn-warning' onClick = 'open_entry_modal(`$tem_id`,`$t_date`,`$t_particulars`, `$t_quantity`, `$t_debit`, `$t_credit`)'>Edit</a>
                                         <a class = 'btn btn-danger' onClick = 'confirm_entry_del(`$tem_id`)'>Delete</a></td>
                                         </td>
                                     </tr>  
                                 ";  
                                 $num--; 
-                                $total_amount += $t_amount; 
+                                // $total_amount += $t_amount; 
+                                $total_amount += $t_debit; 
                             }
                     ?>  
                     </tbody>  

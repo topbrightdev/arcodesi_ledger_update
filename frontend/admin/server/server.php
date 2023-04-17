@@ -62,6 +62,7 @@ if (isset($_POST['reg_user'])) {
     $_SESSION['success'] = "You are now logged in";
     header('location: ./admin/');
   }
+ 
 }
 
 
@@ -92,9 +93,11 @@ if (isset($_POST['login_admin'])) {
       $_SESSION['admin_email'] = $email;
       $_SESSION['fullname'] = $row['fullname'];
       $_SESSION['admin_name'] = $admin_username;
+      $_SESSION['is_admin'] = $row['is_admin'];
       $_SESSION['success'] = "You are now logged in";
       header('location: ./admin/');
     }else {
+      echo "<div class='alert alert-danger' id = 'alert_message' style = 'width: 300px; height: 200px; right: 200px; top: 100px; font-size: 20px;  position: absolute;'>Your email and password doesn't match! Input correct email or password!</div>";
       array_push($errors, "Wrong username/password combination");
     }
   }

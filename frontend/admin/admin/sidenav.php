@@ -130,7 +130,7 @@
                         </a>
                     </li>
                     <li class="nav-item ">
-                        <a class="nav-link" href="demo1.php">
+                        <a class="nav-link" href="demo3.php">
                             <i class="material-icons">table </i>
                             <p>Entry</p>
                         </a>

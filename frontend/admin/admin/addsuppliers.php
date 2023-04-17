@@ -31,6 +31,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
   $from = $_POST['date_from']; 
   $to = $_POST['date_to']; 
   $down_type = $_POST['down_type'];
+
   if ($down_type == 'transaction') {
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
@@ -38,10 +39,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
     $sheet->setCellValue('B1', 'CustomerCode');
     $sheet->setCellValue('C1', 'Customer Name');
     $sheet->setCellValue('D1', 'Beat/Route');
-    $sheet->setCellValue('E1', 'Salesman');
+    $sheet->setCellValue('E1', 'Description');
     $sheet->setCellValue('F1', 'Debit');
     $sheet->setCellValue('G1', 'Credit');
-    $sheet->setCellValue('H1', 'Description');
+    $sheet->setCellValue('H1', 'Salesman');
     $sheet->setCellValue('I1', 'Amount(Credit - Debit)');
     $sheet->setCellValue('J1', 'Date');
     $transaction_result = mysqli_query($con, "select * from supply where date between '$from' and '$to'") or die ("query incorrect");
@@ -50,18 +51,24 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
     $num = mysqli_num_rows($transaction_result);
     while ( $num > 0) {
       $row = mysqli_fetch_assoc($transaction_result); 
+      $temp_code = $row['CustomerCode']; 
+      $tra11 = mysqli_query($con, "select name, beat from suppliers where CustomerCode = '$temp_code'"); 
+      $row_name = mysqli_fetch_assoc($tra11); 
+
       if ($row == null) {
         list($id, $suppliers_id, $particulars, $quantity, $debit, $credit, $date, $CustomerCode) = mysqli_fetch_array($transaction_result); 
+        $tra12 = mysqli_query($con, "select name, beat from suppliers where CustomerCode = '$CustomerCode'"); 
+        list($name, $beat) = mysqli_fetch_array($tra12); 
       }
       $sheet->setCellValue('A'.$rowCount, $rowCount - 1);
       $row !== null ? $sheet->setCellValue('B'.$rowCount, $row['CustomerCode']) : $sheet->setCellValue('B'.$rowCount, $CustomerCode);
-      $row !== null ? $sheet->setCellValue('C'.$rowCount, $row['suppliers_id']) : $sheet->setCellValue('C'.$rowCount, $suppliers_id);
-      $row !== null ? $sheet->setCellValue('D'.$rowCount, 'SDF') : $sheet->setCellValue('D'.$rowCount, 'Last');
+      $row !== null ? $sheet->setCellValue('C'.$rowCount, $row_name['name']) : $sheet->setCellValue('C'.$rowCount, $name);
+      $row !== null ? $sheet->setCellValue('D'.$rowCount, $row_name['beat']) : $sheet->setCellValue('D'.$rowCount, $beat);
       $row !== null ? $sheet->setCellValue('E'.$rowCount, $row['particulars']) : $sheet->setCellValue('E'.$rowCount, $particulars);
       $row !== null ? $sheet->setCellValue('F'.$rowCount, $row['debit']) : $sheet->setCellValue('F'.$rowCount, $debit);
       $row !== null ? $sheet->setCellValue('G'.$rowCount, $row['credit']) : $sheet->setCellValue('G'.$rowCount, $credit);
       $row !== null ? $sheet->setCellValue('H'.$rowCount, $row['quantity']) : $sheet->setCellValue('H'.$rowCount, $quantity);
-      $row !== null ? $sheet->setCellValue('I'.$rowCount, $row['credit'] - $row['debit']) : $sheet->setCellValue('I'.$rowCount, $credit - $debit);
+      $row !== null ? $sheet->setCellValue('I'.$rowCount, $row['debit'] - $row['credit']) : $sheet->setCellValue('I'.$rowCount, $credit - $debit);
       $row !== null ? $sheet->setCellValue('J'.$rowCount, $row['date']) : $sheet->setCellValue('J'.$rowCount, $date);
       $rowCount++; 
       $num--; 
@@ -108,7 +115,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
       $tra11 = mysqli_query($con, "select sum(debit) as total from supply where suppliers_id = '$tem' and date between '$from' and '$to'"); 
       $dis_tra11 = mysqli_fetch_assoc($tra11); 
       $d1 = $dis_tra11['total']; 
-      $real = $d - $d1; 
+      $real = $d1 - $d; 
       
       list ($id, $name, $beat, $CustomerCode) = mysqli_fetch_array($tra_name);
       $d_name = $dis_tra_dis !== null ? $dis_tra_dis['name'] : $name;
@@ -164,6 +171,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
           $d_beat = $beat;
           $d_code = $CustomerCode; 
         }
+        
         else {
           $d_name = $dis_tra_dis['name'];
           $d_beat = $dis_tra_dis['beat'];
@@ -179,7 +187,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
       $tra12 = mysqli_query($con, "select sum(debit) as total from supply where suppliers_id = '$tem'"); 
       $dis_tra12 = mysqli_fetch_assoc($tra12); 
       $d2 = $dis_tra12['total']; 
-      $real = $d - $d2; 
+      $real = $d2 - $d; 
 
       $sheet->setCellValue('A'.$rowCount, $rowCount - 1);
       $row !== null ? $sheet->setCellValue('B'.$rowCount, $d_code) : $sheet->setCellValue('B'.$rowCount, $dt_code);
@@ -272,7 +280,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
       $tra12 = mysqli_query($con, "select sum(debit) as total from supply where suppliers_id = '$tem'"); 
       $dis_tra12 = mysqli_fetch_assoc($tra12); 
       $d2 = $dis_tra12['total']; 
-      $real = $d - $d2; 
+      $real = $d2 - $d; 
 
       $sheet->setCellValue('A'.$rowCount, $rowCount - 1);
       $row !== null ? $sheet->setCellValue('B'.$rowCount, $d_date) : $sheet->setCellValue('B'.$rowCount, $dt_date);
@@ -385,7 +393,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_save'])) {
 
         <script>  
             $(document).ready(function(){  
-                $('#alert_message').fadeOut(1000);  
+                $('#alert_message').fadeOut(3000);  
             });  
         </script>
       <?php
